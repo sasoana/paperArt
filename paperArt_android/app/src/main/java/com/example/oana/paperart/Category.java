@@ -1,20 +1,27 @@
 package com.example.oana.paperart;
 
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Ignore;
+import android.arch.persistence.room.PrimaryKey;
+
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by oana on 12/4/2017.
  */
 
+@Entity(tableName = "categories")
 public class Category implements Serializable {
+    @PrimaryKey
     Integer id;
     String name;
     String description;
     String imageName;
+    @Ignore
     ArrayList<PaperItem> items;
 
+    @Ignore
     public Category(Integer id, String name, String description, String imageName, ArrayList<PaperItem> items) {
         this.id = id;
         this.name = name;
@@ -30,6 +37,8 @@ public class Category implements Serializable {
         this.imageName = imageName;
         this.items = new ArrayList<>();
     }
+
+
 
     public void addItem(PaperItem item) {
         this.items.add(item);

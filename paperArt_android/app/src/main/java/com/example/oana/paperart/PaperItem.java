@@ -1,5 +1,9 @@
 package com.example.oana.paperart;
 
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Ignore;
+import android.arch.persistence.room.PrimaryKey;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,13 +12,17 @@ import java.util.List;
  * Created by oana on 11/7/2017.
  */
 
+@Entity(tableName = "items")
 public class PaperItem implements Serializable{
+    @PrimaryKey
     Integer id;
+
     Integer categoryId;
     String name;
     String paperType;
     String color;
     Integer duration;
+    @Ignore
     List<Rating> ratings;
 
     public PaperItem(Integer id, Integer categoryId, String name, String paperType, String color, Integer duration) {
@@ -27,6 +35,7 @@ public class PaperItem implements Serializable{
         this.ratings = new ArrayList<>();
     }
 
+    @Ignore
     public PaperItem(Integer id, Integer categoryId, String name, String paperType, String color, Integer duration, List<Rating> ratings) {
         this.id = id;
         this.categoryId = categoryId;
