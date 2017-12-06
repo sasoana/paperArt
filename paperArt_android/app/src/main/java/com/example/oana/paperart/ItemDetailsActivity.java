@@ -35,7 +35,8 @@ public class ItemDetailsActivity extends Activity {
         Button saveButton = (Button) findViewById(R.id.button_save);
         saveButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                PaperItem newItem = new PaperItem(item.getId(), editText_name.getText().toString(),
+                PaperItem newItem = new PaperItem(item.getId(), item.getCategoryId(),
+                        editText_name.getText().toString(),
                         editText_paper.getText().toString(),
                         editText_color.getText().toString(),
                         Integer.parseInt(editText_duration.getText().toString()));

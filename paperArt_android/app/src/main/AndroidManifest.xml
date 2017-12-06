@@ -20,6 +20,8 @@
         </activity>
         <activity android:name=".ItemList">
         </activity>
+        <activity android:name=".CategoryList">
+        </activity>
     </application>
 
 </manifest>

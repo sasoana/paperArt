@@ -1,6 +1,8 @@
 package com.example.oana.paperart;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by oana on 11/7/2017.
@@ -8,17 +10,31 @@ import java.io.Serializable;
 
 public class PaperItem implements Serializable{
     Integer id;
+    Integer categoryId;
     String name;
     String paperType;
     String color;
     Integer duration;
+    List<Rating> ratings;
 
-    public PaperItem(Integer id, String name, String paperType, String color, Integer duration) {
+    public PaperItem(Integer id, Integer categoryId, String name, String paperType, String color, Integer duration) {
         this.id = id;
+        this.categoryId = categoryId;
         this.name = name;
         this.paperType = paperType;
         this.color = color;
         this.duration = duration;
+        this.ratings = new ArrayList<>();
+    }
+
+    public PaperItem(Integer id, Integer categoryId, String name, String paperType, String color, Integer duration, List<Rating> ratings) {
+        this.id = id;
+        this.categoryId = categoryId;
+        this.name = name;
+        this.paperType = paperType;
+        this.color = color;
+        this.duration = duration;
+        this.ratings = ratings;
     }
 
     public Integer getId() {
@@ -61,6 +77,14 @@ public class PaperItem implements Serializable{
         this.duration = duration;
     }
 
+    public void addRating(Rating rating) {
+        this.ratings.add(rating);
+    }
+
+    public void removeRating(Rating rating) {
+        this.ratings.remove(rating);
+    }
+
     @Override
     public String toString() {
         return "PaperItem{" +
@@ -69,6 +93,7 @@ public class PaperItem implements Serializable{
                 ", paperType='" + paperType + '\'' +
                 ", color='" + color + '\'' +
                 ", duration=" + duration +
+                ", ratings=" + ratings +
                 '}';
     }
 
@@ -86,5 +111,21 @@ public class PaperItem implements Serializable{
     @Override
     public int hashCode() {
         return id != null ? id.hashCode() : 0;
+    }
+
+    public List<Rating> getRatings() {
+        return ratings;
+    }
+
+    public void setRatings(List<Rating> ratings) {
+        this.ratings = ratings;
+    }
+
+    public Integer getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Integer categoryId) {
+        this.categoryId = categoryId;
     }
 }

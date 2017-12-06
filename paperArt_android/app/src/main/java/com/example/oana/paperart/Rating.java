@@ -7,4 +7,8 @@ import java.io.Serializable;
  */
 
 public class Rating implements Serializable {
+    Integer id;
+    Integer modelId;
+    Integer value;
+    String message;
 }

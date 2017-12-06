@@ -28,10 +28,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button saveButton = (Button) findViewById(R.id.list_button);
-        saveButton.setOnClickListener(new View.OnClickListener() {
+        Button listButton = (Button) findViewById(R.id.list_button);
+        listButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, ItemList.class);
+                Intent intent = new Intent(MainActivity.this, CategoryList.class);
                 startActivity(intent);
             }
         });

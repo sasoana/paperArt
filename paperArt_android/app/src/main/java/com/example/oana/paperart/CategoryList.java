@@ -3,7 +3,10 @@ package com.example.oana.paperart;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.ScaleDrawable;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -19,12 +22,18 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by oana on 11/8/2017.
+ * Created by oana on 12/6/2017.
  */
 
-public class ItemList extends Activity {
-    ArrayList<PaperItem> items = new ArrayList<>();
-    Category category;
+public class CategoryList extends Activity {
+    final List<Category> categories = new ArrayList<>(Arrays.asList(
+            new Category(0, "Modular", "Origami composed of 2 or more parts", "modular", new ArrayList<PaperItem>(Arrays.asList(
+                    new PaperItem(0, 0, "Cat", "Regular", "Grey", 25),
+                    new PaperItem(1, 0, "Dragon", "Tant", "Red", 225)))),
+            new Category(1, "Pure", "Origami from one sheet of paper, no cuts", "pure", new ArrayList<PaperItem>(Arrays.asList(
+                    new PaperItem(0, 1, "Cat", "Regular", "Grey", 25)))),
+            new Category(2, "Kusudama", "Flower-like spheres", "kusudama", new ArrayList<PaperItem>(Arrays.asList(
+                    new PaperItem(2, 2, "Boat", "Kami", "Blue", 20))))));
     ListAdapter adapter;
 
     @Override
@@ -32,18 +41,15 @@ public class ItemList extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list);
         ListView listview = (ListView) findViewById(R.id.listview);
-        Category category = (Category) getIntent().getExtras().getSerializable("category");
-        this.items = category.getItems();
-        this.category = category;
 
         TextView textView = new TextView(listview.getContext());
-        textView.setText("Items in " + category.getName() + " category");
-
-        listview.addHeaderView(textView, "", false);
+        textView.setText("Categories");
         textView.setTextSize(20);
         textView.setTextColor(Color.BLACK);
 
-        adapter = new ListAdapter(this, R.layout.list_item, items);
+        listview.addHeaderView(textView, "", false);
+
+        adapter = new ListAdapter(this, R.layout.activity_list, categories);
         listview.setAdapter(adapter);
 
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -51,40 +57,32 @@ public class ItemList extends Activity {
             @Override
             public void onItemClick(AdapterView<?> parent, final View view,
                                     int position, long id) {
-                Intent intent = new Intent(ItemList.this, ItemDetailsActivity.class);
-                intent.putExtra("item", items.get(position-1));
+                Intent intent = new Intent(CategoryList.this, ItemList.class);
+                intent.putExtra("category", categories.get(position-1));
                 startActivityForResult(intent, 1);
             }
 
         });
     }
 
-    public void onBackPressed() {
-        Intent resultIntent = new Intent();
-        this.category.setItems(items);
-        resultIntent.putExtra("category", category);
-        setResult(Activity.RESULT_OK, resultIntent);
-        finish();
-    }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK) {
-            PaperItem returnValue = (PaperItem) data.getSerializableExtra("newItem");
-            items.set(items.indexOf(returnValue), returnValue);
+            Category returnValue = (Category) data.getSerializableExtra("category");
+            categories.set(categories.indexOf(returnValue), returnValue);
             adapter.notifyDataSetChanged();
         }
     }
 
-    private class ListAdapter extends ArrayAdapter<PaperItem> {
+    private class ListAdapter extends ArrayAdapter<Category> {
 
         public ListAdapter(Context context, int textViewResourceId) {
             super(context, textViewResourceId);
         }
 
-        public ListAdapter(Context context, int resource, List<PaperItem> items) {
-            super(context, resource, items);
+        public ListAdapter(Context context, int resource, List<Category> categories) {
+            super(context, resource, categories);
         }
 
         @Override
@@ -98,16 +96,18 @@ public class ItemList extends Activity {
                 v = vi.inflate(R.layout.list_item, null);
             }
 
-            PaperItem p = getItem(position);
+            Category c = getItem(position);
 
-            if (p != null) {
+            if (c != null) {
                 TextView t = (TextView) v.findViewById(R.id.textView);
+                TextView d = (TextView) v.findViewById(R.id.descriptionView);
 
                 if (t != null) {
-                    t.setText("Model name: " + p.getName() + "\n"
-                            + "Paper type: " + p.getPaperType() + "\n"
-                            + "Duration: " + p.getDuration() + " minutes");
-                    t.setCompoundDrawablesWithIntrinsicBounds(R.drawable.rsz_img_4068, 0, 0, 0);
+                    t.setText(c.getName() + "\n");
+                    d.setText("Description: " + c.getDescription() + "\n");
+                    Context context = t.getContext();
+                    t.setCompoundDrawablesWithIntrinsicBounds(
+                            context.getResources().getIdentifier(c.getImageName(), "drawable", context.getPackageName()), 0, 0, 0);
                 }
             }
             return v;
