@@ -6,13 +6,15 @@ import android.arch.persistence.room.RoomDatabase;
 import android.content.Context;
 
 import com.example.oana.paperart.Category;
+import com.example.oana.paperart.PaperItem;
 
-@Database(entities = {Category.class}, version = 1)
+@Database(entities = {Category.class, PaperItem.class}, version = 4)
 public abstract class AppDatabase extends RoomDatabase {
 
     private static AppDatabase INSTANCE;
 
     public abstract CategoryDAO categoryDAO();
+    public abstract PaperItemDAO paperItemDAO();
 
     public static AppDatabase getAppDatabase(Context context) {
         if (INSTANCE == null) {

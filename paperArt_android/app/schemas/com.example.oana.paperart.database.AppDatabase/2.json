@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 1,
-    "identityHash": "6a2cbf6a7b4d68b4515d9acbfa0b006a",
+    "version": 2,
+    "identityHash": "71c8b9594c143dff45f7909b3b27792a",
     "entities": [
       {
         "tableName": "categories",
@@ -40,7 +40,7 @@
       },
       {
         "tableName": "items",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER, `categoryId` INTEGER, `name` TEXT, `paperType` TEXT, `color` TEXT, `duration` INTEGER, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `categoryId` INTEGER, `name` TEXT, `paperType` TEXT, `color` TEXT, `duration` INTEGER)",
         "fields": [
           {
             "fieldPath": "id",
@@ -77,7 +77,7 @@
           "columnNames": [
             "id"
           ],
-          "autoGenerate": false
+          "autoGenerate": true
         },
         "indices": [],
         "foreignKeys": []
@@ -85,7 +85,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"6a2cbf6a7b4d68b4515d9acbfa0b006a\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"71c8b9594c143dff45f7909b3b27792a\")"
     ]
   }
 }

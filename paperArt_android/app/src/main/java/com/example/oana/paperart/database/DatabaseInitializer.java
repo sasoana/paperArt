@@ -18,8 +18,13 @@ package com.example.oana.paperart.database;
 import android.os.AsyncTask;
 
 import com.example.oana.paperart.Category;
+import com.example.oana.paperart.PaperItem;
 
 public class DatabaseInitializer {
+
+    public static void populate(final AppDatabase db) {
+        populateWithTestData(db);
+    }
 
     public static void populateAsync(final AppDatabase db) {
 
@@ -28,12 +33,18 @@ public class DatabaseInitializer {
     }
 
     private static void populateWithTestData(AppDatabase db) {
+        db.paperItemDAO().deleteAll();
         db.categoryDAO().deleteAll();
 
+        Integer newId = 0;
+        long cat1 = db.categoryDAO().addCategory(new Category(newId, "Pure", "Origami from one sheet of paper, no cuts", "pure"));
+        long cat2 = db.categoryDAO().addCategory(new Category(newId, "Kusudama", "Flower-like spheres", "kusudama"));
+        long cat3 = db.categoryDAO().addCategory(new Category(newId, "Modular", "Origami composed of 2 or more parts", "modular"));
 
-        db.categoryDAO().addCategory(new Category(1, "Pure", "Origami from one sheet of paper, no cuts", "pure"));
-        db.categoryDAO().addCategory(new Category(2, "Kusudama", "Flower-like spheres", "kusudama"));
-        db.categoryDAO().addCategory(new Category(3, "Modular", "Origami composed of 2 or more parts", "modular"));
+        db.paperItemDAO().addItem(new PaperItem(newId, (int)cat1, "Cat", "Regular", "Grey", 25));
+        db.paperItemDAO().addItem(new PaperItem(newId, (int)cat2, "Dragon", "Tant", "Red", 225));
+        db.paperItemDAO().addItem(new PaperItem(newId, (int)cat2, "Boat", "Kami", "Blue", 20));
+        db.paperItemDAO().addItem(new PaperItem(newId, (int)cat3, "Lilly", "Regular", "White", 15));
 
     }
 

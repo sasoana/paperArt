@@ -5,16 +5,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.oana.paperart.database.AppDatabase;
-import com.example.oana.paperart.database.DatabaseInitializer;
+import com.example.oana.paperart.database.CategoryWithItems;
 
 import java.util.List;
 
@@ -25,17 +28,8 @@ import java.util.List;
 public class CategoryList extends Activity {
     private AppDatabase mDb;
 
-    List<Category> categories;
+    List<CategoryWithItems> categories;
 
-    /*List<Category> categories = new ArrayList<>(Arrays.asList(
-            new Category(0, "Modular", "Origami composed of 2 or more parts", "modular", new ArrayList<PaperItem>(Arrays.asList(
-                    new PaperItem(0, 0, "Cat", "Regular", "Grey", 25),
-                    new PaperItem(1, 0, "Dragon", "Tant", "Red", 225)))),
-            new Category(1, "Pure", "Origami from one sheet of paper, no cuts", "pure", new ArrayList<PaperItem>(Arrays.asList(
-                    new PaperItem(0, 1, "Cat", "Regular", "Grey", 25)))),
-            new Category(2, "Kusudama", "Flower-like spheres", "kusudama", new ArrayList<PaperItem>(Arrays.asList(
-                    new PaperItem(2, 2, "Boat", "Kami", "Blue", 20))))));
-*/
     ListAdapter adapter;
 
     @Override
@@ -46,18 +40,29 @@ public class CategoryList extends Activity {
 
         mDb = AppDatabase.getAppDatabase(getApplicationContext());
 
-        DatabaseInitializer.populateAsync(mDb);
-
+        //DatabaseInitializer.populateAsync(mDb);
+        //DatabaseInitializer.populate(mDb);
         this.categories = mDb.categoryDAO().getAll();
 
+        //add header to list view
         TextView textView = new TextView(listview.getContext());
         textView.setText("Categories");
         textView.setTextSize(20);
         textView.setTextColor(Color.BLACK);
-
         listview.addHeaderView(textView, "", false);
 
-        adapter = new ListAdapter(this, R.layout.activity_list, categories);
+        //add footer to list view
+        Button addButton = new Button(listview.getContext());
+        addButton.setText("Add new category");
+        listview.addFooterView(addButton, "", true);
+        addButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent(CategoryList.this, CategoryDetalis.class);
+                startActivityForResult(intent, 0);
+            }
+        });
+
+        adapter = new ListAdapter(this, R.layout.activity_list, mDb.categoryDAO().getAll());
         listview.setAdapter(adapter);
 
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -71,25 +76,45 @@ public class CategoryList extends Activity {
             }
 
         });
+
+        listview.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view,
+                                           int arg2, long arg3) {
+
+                List<CategoryWithItems> categories = mDb.categoryDAO().getAll();
+                mDb.categoryDAO().delete(categories.get(arg2-1).category);
+                loadData();
+                Toast.makeText(CategoryList.this, "The category has been removed!", Toast.LENGTH_LONG).show();
+                return false;
+            }
+        });
+    }
+
+    public void loadData() {
+        this.categories = mDb.categoryDAO().getAll();
+        adapter.clear();
+        adapter.addAll(this.categories);
+        adapter.notifyDataSetChanged();
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK) {
-            Category returnValue = (Category) data.getSerializableExtra("category");
-            categories.set(categories.indexOf(returnValue), returnValue);
-            adapter.notifyDataSetChanged();
+            loadData();
+            Log.wtf("xxx", this.categories.toString());
         }
     }
 
-    private class ListAdapter extends ArrayAdapter<Category> {
+    private class ListAdapter extends ArrayAdapter<CategoryWithItems> {
 
         public ListAdapter(Context context, int textViewResourceId) {
             super(context, textViewResourceId);
         }
 
-        public ListAdapter(Context context, int resource, List<Category> categories) {
+        public ListAdapter(Context context, int resource, List<CategoryWithItems> categories) {
             super(context, resource, categories);
         }
 
@@ -104,18 +129,18 @@ public class CategoryList extends Activity {
                 v = vi.inflate(R.layout.list_item, null);
             }
 
-            Category c = getItem(position);
+            CategoryWithItems c = getItem(position);
 
             if (c != null) {
                 TextView t = (TextView) v.findViewById(R.id.textView);
                 TextView d = (TextView) v.findViewById(R.id.descriptionView);
 
                 if (t != null) {
-                    t.setText(c.getName() + "\n");
-                    d.setText("Description: " + c.getDescription() + "\n");
+                    t.setText(c.category.getName() + "\n");
+                    d.setText("Description: " + c.category.getDescription() + "\n");
                     Context context = t.getContext();
                     t.setCompoundDrawablesWithIntrinsicBounds(
-                            context.getResources().getIdentifier(c.getImageName(), "drawable", context.getPackageName()), 0, 0, 0);
+                            context.getResources().getIdentifier(c.category.getImageName(), "drawable", context.getPackageName()), 0, 0, 0);
                 }
             }
             return v;

@@ -14,8 +14,8 @@ import java.util.List;
 
 @Entity(tableName = "items")
 public class PaperItem implements Serializable{
-    @PrimaryKey
-    Integer id;
+    @PrimaryKey(autoGenerate = true)
+    int id;
 
     Integer categoryId;
     String name;
@@ -25,7 +25,7 @@ public class PaperItem implements Serializable{
     @Ignore
     List<Rating> ratings;
 
-    public PaperItem(Integer id, Integer categoryId, String name, String paperType, String color, Integer duration) {
+    public PaperItem(int id, Integer categoryId, String name, String paperType, String color, Integer duration) {
         this.id = id;
         this.categoryId = categoryId;
         this.name = name;
@@ -35,6 +35,17 @@ public class PaperItem implements Serializable{
         this.ratings = new ArrayList<>();
     }
 
+    @Ignore
+    public PaperItem(int categoryId){
+        Integer newId = 0;
+        this.id = newId;
+        this.categoryId = categoryId;
+        this.name = "";
+        this.paperType = "";
+        this.color = "";
+        this.duration = 0;
+        this.ratings = new ArrayList<>();
+    }
     @Ignore
     public PaperItem(Integer id, Integer categoryId, String name, String paperType, String color, Integer duration, List<Rating> ratings) {
         this.id = id;
@@ -113,13 +124,8 @@ public class PaperItem implements Serializable{
 
         PaperItem paperItem = (PaperItem) o;
 
-        return id != null ? id.equals(paperItem.id) : paperItem.id == null;
+        return id == paperItem.id;
 
-    }
-
-    @Override
-    public int hashCode() {
-        return id != null ? id.hashCode() : 0;
     }
 
     public List<Rating> getRatings() {

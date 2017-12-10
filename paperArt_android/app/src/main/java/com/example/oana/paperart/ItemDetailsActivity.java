@@ -6,18 +6,23 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.oana.paperart.database.AppDatabase;
 
 /**
  * Created by oana on 11/7/2017.
  */
 
 public class ItemDetailsActivity extends Activity {
+    private AppDatabase mdb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.item_details);
+        mdb = AppDatabase.getAppDatabase(getApplicationContext());
+
         final PaperItem item = (PaperItem) getIntent().getExtras().getSerializable("item");
 
         final EditText editText_name = (EditText) findViewById(R.id.edit_name);
@@ -41,6 +46,8 @@ public class ItemDetailsActivity extends Activity {
                         editText_color.getText().toString(),
                         Integer.parseInt(editText_duration.getText().toString()));
                 Intent resultIntent = new Intent();
+                mdb.paperItemDAO().addItem(newItem);
+                Toast.makeText(ItemDetailsActivity.this, "The item has been added!", Toast.LENGTH_LONG).show();
                 resultIntent.putExtra("newItem", newItem);
                 setResult(Activity.RESULT_OK, resultIntent);
                 finish();

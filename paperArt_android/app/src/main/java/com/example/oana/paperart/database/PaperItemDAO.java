@@ -22,6 +22,9 @@ public interface PaperItemDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<PaperItem> items);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertOne(PaperItem items);
+
     @Query("select * from items where id=:id")
     PaperItem findById(long id);
 
@@ -30,5 +33,8 @@ public interface PaperItemDAO {
 
     @Delete
     void delete(PaperItem item);
+
+    @Query("delete from items")
+    void deleteAll();
 
 }

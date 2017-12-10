@@ -5,17 +5,21 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.view.Gravity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.oana.paperart.database.AppDatabase;
+import com.example.oana.paperart.database.CategoryWithItems;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -24,24 +28,38 @@ import java.util.List;
 
 public class ItemList extends Activity {
     ArrayList<PaperItem> items = new ArrayList<>();
-    Category category;
+    CategoryWithItems category;
     ListAdapter adapter;
+    private AppDatabase mDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mDb = AppDatabase.getAppDatabase(getApplicationContext());
         setContentView(R.layout.activity_list);
         ListView listview = (ListView) findViewById(R.id.listview);
-        Category category = (Category) getIntent().getExtras().getSerializable("category");
-        this.items = category.getItems();
+        final CategoryWithItems category = (CategoryWithItems) getIntent().getSerializableExtra("category");
+        this.items = new ArrayList<>(category.items);
         this.category = category;
 
+        //add header to list view
         TextView textView = new TextView(listview.getContext());
-        textView.setText("Items in " + category.getName() + " category");
-
+        textView.setText("Items in " + this.category.category.getName() + " category");
         listview.addHeaderView(textView, "", false);
         textView.setTextSize(20);
         textView.setTextColor(Color.BLACK);
+
+        //add footer to list view
+        Button addButton = new Button(listview.getContext());
+        addButton.setText("Add new item in this category");
+        listview.addFooterView(addButton, "", true);
+        addButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent(ItemList.this, ItemDetailsActivity.class);
+                intent.putExtra("item", new PaperItem(category.category.getId()));
+                startActivityForResult(intent, 1);
+            }
+        });
 
         adapter = new ListAdapter(this, R.layout.list_item, items);
         listview.setAdapter(adapter);
@@ -57,12 +75,33 @@ public class ItemList extends Activity {
             }
 
         });
+
+        listview.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view,
+                                           int arg2, long arg3) {
+
+                mDb.paperItemDAO().delete(items.get(arg2-1));
+                loadData();
+                Toast.makeText(ItemList.this, "The item has been removed!", Toast.LENGTH_LONG).show();
+                return false;
+            }
+        });
+    }
+
+    public void loadData() {
+        this.items = new ArrayList<>(mDb.categoryDAO().getOne(this.category.category.getId()).items);
+        adapter.clear();
+        adapter.addAll(this.items);
+        adapter.notifyDataSetChanged();
     }
 
     public void onBackPressed() {
         Intent resultIntent = new Intent();
-        this.category.setItems(items);
-        resultIntent.putExtra("category", category);
+        this.category.items = items;
+        resultIntent.putExtra("category", this.category);
+        Log.wtf(ItemList.class.getSimpleName(), "xxx" + this.category.toString());
         setResult(Activity.RESULT_OK, resultIntent);
         finish();
     }
@@ -71,9 +110,7 @@ public class ItemList extends Activity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK) {
-            PaperItem returnValue = (PaperItem) data.getSerializableExtra("newItem");
-            items.set(items.indexOf(returnValue), returnValue);
-            adapter.notifyDataSetChanged();
+            loadData();
         }
     }
 
