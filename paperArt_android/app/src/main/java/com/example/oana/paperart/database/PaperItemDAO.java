@@ -5,6 +5,7 @@ import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
+import android.arch.persistence.room.Update;
 
 import com.example.oana.paperart.PaperItem;
 
@@ -24,6 +25,9 @@ public interface PaperItemDAO {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertOne(PaperItem items);
+
+    @Update
+    void update(PaperItem item);
 
     @Query("select * from items where id=:id")
     PaperItem findById(long id);

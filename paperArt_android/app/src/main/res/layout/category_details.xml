@@ -30,12 +30,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="18sp"
-        android:text="Color: "/>
-    <EditText android:id="@+id/edit_image"
-        android:layout_height="wrap_content"
+        android:text="Image: "/>
+    <Spinner
         android:layout_width="match_parent"
-        android:inputType="text"
-        android:text="" />
+        android:layout_height="wrap_content"
+        android:id="@+id/imageSpinner">
+    </Spinner>
     <Button android:id="@+id/button_save_cat"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

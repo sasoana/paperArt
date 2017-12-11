@@ -3,9 +3,13 @@ package com.example.oana.paperart;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
+import android.arch.persistence.room.TypeConverters;
+
+import com.example.oana.paperart.database.DateConverter;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -22,16 +26,19 @@ public class PaperItem implements Serializable{
     String paperType;
     String color;
     Integer duration;
+    @TypeConverters({DateConverter.class})
+    Date createdAt;
     @Ignore
     List<Rating> ratings;
 
-    public PaperItem(int id, Integer categoryId, String name, String paperType, String color, Integer duration) {
+    public PaperItem(int id, Integer categoryId, String name, String paperType, String color, Integer duration, Date createdAt) {
         this.id = id;
         this.categoryId = categoryId;
         this.name = name;
         this.paperType = paperType;
         this.color = color;
         this.duration = duration;
+        this.createdAt = createdAt;
         this.ratings = new ArrayList<>();
     }
 
@@ -44,24 +51,26 @@ public class PaperItem implements Serializable{
         this.paperType = "";
         this.color = "";
         this.duration = 0;
+        this.createdAt = new Date();
         this.ratings = new ArrayList<>();
     }
     @Ignore
-    public PaperItem(Integer id, Integer categoryId, String name, String paperType, String color, Integer duration, List<Rating> ratings) {
+    public PaperItem(Integer id, Integer categoryId, String name, String paperType, String color, Integer duration, Date createdAt, List<Rating> ratings) {
         this.id = id;
         this.categoryId = categoryId;
         this.name = name;
         this.paperType = paperType;
         this.color = color;
         this.duration = duration;
+        this.createdAt = createdAt;
         this.ratings = ratings;
     }
 
-    public Integer getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(int id) {
         this.id = id;
     }
 
@@ -113,6 +122,7 @@ public class PaperItem implements Serializable{
                 ", paperType='" + paperType + '\'' +
                 ", color='" + color + '\'' +
                 ", duration=" + duration +
+                ", createdAt=" + createdAt.toString() +
                 ", ratings=" + ratings +
                 '}';
     }
@@ -125,7 +135,6 @@ public class PaperItem implements Serializable{
         PaperItem paperItem = (PaperItem) o;
 
         return id == paperItem.id;
-
     }
 
     public List<Rating> getRatings() {
@@ -142,5 +151,13 @@ public class PaperItem implements Serializable{
 
     public void setCategoryId(Integer categoryId) {
         this.categoryId = categoryId;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
     }
 }

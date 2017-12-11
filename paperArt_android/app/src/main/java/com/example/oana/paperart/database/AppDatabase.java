@@ -8,7 +8,7 @@ import android.content.Context;
 import com.example.oana.paperart.Category;
 import com.example.oana.paperart.PaperItem;
 
-@Database(entities = {Category.class, PaperItem.class}, version = 4)
+@Database(entities = {Category.class, PaperItem.class}, version = 5)
 public abstract class AppDatabase extends RoomDatabase {
 
     private static AppDatabase INSTANCE;

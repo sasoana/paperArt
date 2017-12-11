@@ -53,17 +53,21 @@ public class ItemList extends Activity {
         Button addButton = new Button(listview.getContext());
         addButton.setText("Add new item in this category");
         listview.addFooterView(addButton, "", true);
+
+        //add new item
         addButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent intent = new Intent(ItemList.this, ItemDetailsActivity.class);
                 intent.putExtra("item", new PaperItem(category.category.getId()));
-                startActivityForResult(intent, 1);
+                startActivityForResult(intent, 0);
             }
         });
 
         adapter = new ListAdapter(this, R.layout.list_item, items);
         listview.setAdapter(adapter);
 
+
+        //update existing item
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
@@ -110,7 +114,19 @@ public class ItemList extends Activity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK) {
-            loadData();
+            if (requestCode == 0) { //add new item
+                PaperItem newItem = (PaperItem) data.getSerializableExtra("newItem");
+                mDb.paperItemDAO().addItem(newItem);
+                loadData();
+                Toast.makeText(ItemList.this, "The item has been added!", Toast.LENGTH_LONG).show();
+            }
+            if (requestCode == 1) {
+                PaperItem newItem = (PaperItem) data.getSerializableExtra("newItem");
+                mDb.paperItemDAO().update(newItem);
+                loadData();
+                Toast.makeText(ItemList.this, "The item has been updated!", Toast.LENGTH_LONG).show();
+            }
+
         }
     }
 
