@@ -1,9 +1,12 @@
 package com.example.oana.paperart;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -36,7 +39,7 @@ public class CategoryList extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list);
-        ListView listview = (ListView) findViewById(R.id.listview);
+        final ListView listview = (ListView) findViewById(R.id.listview);
 
         mDb = AppDatabase.getAppDatabase(getApplicationContext());
 
@@ -82,11 +85,38 @@ public class CategoryList extends Activity {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view,
                                            int arg2, long arg3) {
+                final CategoryWithItems category = categories.get(arg2-1);
+                if (category.items.size() >= 1) {
+                    AlertDialog.Builder builder;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        builder = new AlertDialog.Builder(listview.getContext(), android.R.style.Theme_Material_Dialog_Alert);
+                    } else {
+                        builder = new AlertDialog.Builder(listview.getContext());
+                    }
+                    builder.setTitle("Delete category")
+                            .setMessage("This category has items that will also be removed.Are you sure you want to delete this entry?")
+                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    // continue with delete
+                                    mDb.categoryDAO().delete(category.category);
+                                    loadData();
+                                    Toast.makeText(CategoryList.this, "The category has been removed!", Toast.LENGTH_LONG).show();
+                                }
+                            })
+                            .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    // do nothing
+                                }
+                            })
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                            .show();
+                }
+                else {
+                    mDb.categoryDAO().delete(category.category);
+                    loadData();
+                    Toast.makeText(CategoryList.this, "The category has been removed!", Toast.LENGTH_LONG).show();
+                }
 
-                List<CategoryWithItems> categories = mDb.categoryDAO().getAll();
-                mDb.categoryDAO().delete(categories.get(arg2-1).category);
-                loadData();
-                Toast.makeText(CategoryList.this, "The category has been removed!", Toast.LENGTH_LONG).show();
                 return false;
             }
         });
