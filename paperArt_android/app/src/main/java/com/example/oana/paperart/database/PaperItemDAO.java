@@ -18,22 +18,19 @@ import java.util.List;
 @Dao
 public interface PaperItemDAO {
     @Query("select * from items")
-    List<PaperItem> getAll();
+    List<ItemWithRatings> getAll();
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<PaperItem> items);
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insertOne(PaperItem items);
 
     @Update
     void update(PaperItem item);
 
     @Query("select * from items where id=:id")
-    PaperItem findById(long id);
+    ItemWithRatings findById(long id);
 
-    @Insert
-    void addItem(PaperItem item);
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    long addItem(PaperItem item);
 
     @Delete
     void delete(PaperItem item);

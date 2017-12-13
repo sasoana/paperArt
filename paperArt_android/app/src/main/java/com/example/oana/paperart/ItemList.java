@@ -18,6 +18,7 @@ import android.widget.Toast;
 
 import com.example.oana.paperart.database.AppDatabase;
 import com.example.oana.paperart.database.CategoryWithItems;
+import com.example.oana.paperart.database.ItemWithRatings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +37,7 @@ public class ItemList extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mDb = AppDatabase.getAppDatabase(getApplicationContext());
+
         setContentView(R.layout.activity_list);
         ListView listview = (ListView) findViewById(R.id.listview);
         final CategoryWithItems category = (CategoryWithItems) getIntent().getSerializableExtra("category");
@@ -58,7 +60,8 @@ public class ItemList extends Activity {
         addButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent intent = new Intent(ItemList.this, ItemDetailsActivity.class);
-                intent.putExtra("item", new PaperItem(category.category.getId()));
+                intent.putExtra("type", "add");
+                intent.putExtra("item", new ItemWithRatings(new PaperItem(category.category.getId())));
                 startActivityForResult(intent, 0);
             }
         });
@@ -74,7 +77,8 @@ public class ItemList extends Activity {
             public void onItemClick(AdapterView<?> parent, final View view,
                                     int position, long id) {
                 Intent intent = new Intent(ItemList.this, ItemDetailsActivity.class);
-                intent.putExtra("item", items.get(position-1));
+                intent.putExtra("type", "update");
+                intent.putExtra("item", mDb.paperItemDAO().findById(items.get(position-1).getId()));
                 startActivityForResult(intent, 1);
             }
 

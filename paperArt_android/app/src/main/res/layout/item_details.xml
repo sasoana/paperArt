@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
@@ -59,17 +63,37 @@
         <TextView android:id="@+id/edit_date"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
+            android:textSize="18sp"
             android:text="" />
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Change date"
-            android:layout_marginLeft="50dp"
+            android:layout_marginLeft="40dp"
             android:onClick="showDatePickerDialog"/>
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_rating"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"/>
 
     <Button android:id="@+id/button_save"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Save model details"/>
+    <Button
+        android:layout_marginTop="20dp"
+        android:id="@+id/showChartButton"
+        android:text="Show rating history"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    <Button
+        android:layout_marginTop="20dp"
+        android:id="@+id/addRating"
+        android:text="Add new rating"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 </LinearLayout>
+</ScrollView>

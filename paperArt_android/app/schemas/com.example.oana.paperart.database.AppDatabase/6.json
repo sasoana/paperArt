@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 5,
-    "identityHash": "01dd0fb52c722072497845352f9680e8",
+    "version": 6,
+    "identityHash": "cf1cc43f8d18304677f24e53b699ff35",
     "entities": [
       {
         "tableName": "categories",
@@ -89,7 +89,7 @@
       },
       {
         "tableName": "ratings",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `modelId` INTEGER, `value` INTEGER, `message` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `modelId` INTEGER, `value` INTEGER, `message` TEXT, `createdAt` INTEGER)",
         "fields": [
           {
             "fieldPath": "id",
@@ -110,6 +110,11 @@
             "fieldPath": "message",
             "columnName": "message",
             "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -124,7 +129,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"01dd0fb52c722072497845352f9680e8\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"cf1cc43f8d18304677f24e53b699ff35\")"
     ]
   }
 }

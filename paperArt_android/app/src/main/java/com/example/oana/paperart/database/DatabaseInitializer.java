@@ -19,6 +19,7 @@ import android.os.AsyncTask;
 
 import com.example.oana.paperart.Category;
 import com.example.oana.paperart.PaperItem;
+import com.example.oana.paperart.Rating;
 
 import java.util.Date;
 
@@ -35,6 +36,7 @@ public class DatabaseInitializer {
     }
 
     private static void populateWithTestData(AppDatabase db) {
+        db.ratingDAO().deleteAll();
         db.paperItemDAO().deleteAll();
         db.categoryDAO().deleteAll();
 
@@ -43,10 +45,13 @@ public class DatabaseInitializer {
         long cat2 = db.categoryDAO().addCategory(new Category(newId, "Kusudama", "Flower-like spheres", "kusudama"));
         long cat3 = db.categoryDAO().addCategory(new Category(newId, "Modular", "Origami composed of 2 or more parts", "modular"));
 
-        db.paperItemDAO().addItem(new PaperItem(newId, (int)cat1, "Cat", "Regular", "Grey", 25, new Date()));
-        db.paperItemDAO().addItem(new PaperItem(newId, (int)cat2, "Dragon", "Tant", "Red", 225, new Date()));
-        db.paperItemDAO().addItem(new PaperItem(newId, (int)cat2, "Boat", "Kami", "Blue", 20, new Date()));
-        db.paperItemDAO().addItem(new PaperItem(newId, (int)cat3, "Lilly", "Regular", "White", 15, new Date()));
+        long mod1 = db.paperItemDAO().addItem(new PaperItem(newId, (int)cat1, "Cat", "Regular", "Grey", 25, new Date()));
+        long mod2 = db.paperItemDAO().addItem(new PaperItem(newId, (int)cat2, "Dragon", "Tant", "Red", 225, new Date()));
+        long mod3 = db.paperItemDAO().addItem(new PaperItem(newId, (int)cat2, "Boat", "Kami", "Blue", 20, new Date()));
+        long mod4 = db.paperItemDAO().addItem(new PaperItem(newId, (int)cat3, "Lilly", "Regular", "White", 15, new Date()));
+
+        db.ratingDAO().add(new Rating(newId, (int)mod1, 3, "", new Date()));
+        db.ratingDAO().add(new Rating(newId, (int)mod1, 2, "", new Date(System.currentTimeMillis()-24*60*60*1000)));
 
     }
 
