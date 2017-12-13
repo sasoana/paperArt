@@ -10,10 +10,13 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.oana.paperart.database.AppDatabase;
 import com.example.oana.paperart.database.ItemWithRatings;
@@ -25,8 +28,10 @@ import com.jjoe64.graphview.series.LineGraphSeries;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -36,6 +41,7 @@ import java.util.Locale;
 public class ItemDetailsActivity extends FragmentActivity {
     private AppDatabase mdb;
     private static TextView editText_date;
+    private ItemWithRatings item;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +50,7 @@ public class ItemDetailsActivity extends FragmentActivity {
 
         mdb = AppDatabase.getAppDatabase(getApplicationContext());
 
-        final ItemWithRatings item = (ItemWithRatings) getIntent().getExtras().getSerializable("item");
+        item = (ItemWithRatings) getIntent().getExtras().getSerializable("item");
 
         //avoid focus on edit text
         TextView name = (TextView) findViewById(R.id.tv_name);
@@ -66,20 +72,7 @@ public class ItemDetailsActivity extends FragmentActivity {
         final DateFormat dateFormat = new SimpleDateFormat("MMMM dd, yyyy", Locale.ENGLISH);
         editText_date.setText(dateFormat.format(item.item.getCreatedAt()));
 
-        TextView averageRating = (TextView) findViewById(R.id.tv_rating);
-
-        //compute average rating
-        final Double average;
-        Integer sum = 0;
-        Log.wtf("xxx", item.ratings.toString());
-        if(!item.ratings.isEmpty()) {
-            for (Rating rating : item.ratings) {
-                sum += rating.getValue();
-            }
-            average =  sum.doubleValue() / item.ratings.size();
-        }
-        else average = sum*1.0;
-        averageRating.setText("Current average rating is " + average.toString());
+        computeAverage();
 
         //save details button
         Button saveButton = (Button) findViewById(R.id.button_save);
@@ -105,7 +98,46 @@ public class ItemDetailsActivity extends FragmentActivity {
 
         //add rating button
         Button addRating = (Button) findViewById(R.id.addRating);
+        addRating.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                final Dialog dialog = new Dialog(ItemDetailsActivity.this);
+                dialog.setContentView(R.layout.rating_details);
+                dialog.setTitle("Give rating for " + item.getItem().getName());
 
+                Spinner spinner = (Spinner) dialog.findViewById(R.id.valueSpinner);
+                List<Integer> list = new ArrayList<Integer>();
+                list.add(1); list.add(2); list.add(3); list.add(4); list.add(5);
+                ArrayAdapter<Integer> dataAdapter = new ArrayAdapter<Integer>(ItemDetailsActivity.this,
+                        android.R.layout.simple_spinner_item, list);
+                dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                spinner.setAdapter(dataAdapter);
+
+                Button save = (Button) dialog.findViewById(R.id.saveRating);
+                save.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        EditText message = (EditText) dialog.findViewById(R.id.edit_rating_message);
+                        String msg = message.getText().toString();
+                        Spinner value = (Spinner) dialog.findViewById(R.id.valueSpinner);
+                        String val = value.getSelectedItem().toString();
+                        Integer newId = 0;
+                        Rating newRating = new Rating(newId, item.item.getId(), Integer.parseInt(val), msg, new Date());
+                        mdb.ratingDAO().add(newRating);
+                        Toast.makeText(ItemDetailsActivity.this, "The rating has been added.", Toast.LENGTH_SHORT).show();
+                        item = mdb.paperItemDAO().findById(item.item.getId());
+                        computeAverage();
+                        dialog.dismiss();
+                    }
+                });
+                Button cancel = (Button) dialog.findViewById(R.id.cancel);
+                cancel.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        dialog.cancel();
+                    }
+                });
+
+                dialog.show();
+            }
+        });
 
         //show chart button
         Button showChart = (Button) findViewById(R.id.showChartButton);
@@ -167,12 +199,29 @@ public class ItemDetailsActivity extends FragmentActivity {
         });
 
 
-        //don't show the button if we add new item
+        //don't show the button for the chart if we add new item
         String type = getIntent().getExtras().getString("type");
         if (type.equals("add")) {
             showChart.setVisibility(View.GONE);
             addRating.setVisibility(View.GONE);
         }
+    }
+
+    public void computeAverage() {
+        //compute average rating
+        TextView averageRating = (TextView) findViewById(R.id.tv_rating);
+
+        final Double average;
+        Integer sum = 0;
+        Log.wtf("xxx", item.ratings.toString());
+        if(!item.ratings.isEmpty()) {
+            for (Rating rating : item.ratings) {
+                sum += rating.getValue();
+            }
+            average =  sum.doubleValue() / item.ratings.size();
+        }
+        else average = sum*1.0;
+        averageRating.setText("Current average rating is " + average.toString());
     }
 
     public void showDatePickerDialog(View v) {

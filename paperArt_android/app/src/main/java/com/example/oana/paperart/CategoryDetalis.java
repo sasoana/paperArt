@@ -30,20 +30,6 @@ public class CategoryDetalis extends Activity {
         setContentView(R.layout.category_details);
         mDb = AppDatabase.getAppDatabase(getApplicationContext());
 
-        //final PaperItem item = (PaperItem) getIntent().getExtras().getSerializable("item");
-
-        /*final EditText editText_name = (EditText) findViewById(R.id.edit_name);
-        editText_name.setText(item.getName());
-
-        final EditText editText_paper = (EditText) findViewById(R.id.edit_paper);
-        editText_paper.setText(item.getPaperType());
-
-        final EditText editText_color = (EditText) findViewById(R.id.edit_color);
-        editText_color.setText(item.getColor());
-
-        final EditText editText_duration = (EditText) findViewById(R.id.edit_duration);
-        editText_duration.setText(item.getDuration().toString());*/
-
         Spinner spinner = (Spinner) findViewById(R.id.imageSpinner);
         List<String> list = new ArrayList<String>();
         list.add("kusudama");
