@@ -2,18 +2,19 @@ import React from 'react';
 import {Text, TextInput, Button, ScrollView} from "react-native";
 import DatePicker from 'react-native-datepicker';
 
-export default class ModelDetails extends React.Component {
+export default class ModelDetailsAdd extends React.Component {
     constructor(props) {
         super(props);
         const { params } = this.props.navigation.state;
         this.state = {
             id: params.data.id,
+            categoryId: params.data.categoryId,
             name: params.data.name,
             paper: params.data.paper,
             color: params.data.color,
             duration: params.data.duration,
             createdAt: params.data.createdAt,
-            };
+        };
     }
 
     render() {
@@ -63,10 +64,10 @@ export default class ModelDetails extends React.Component {
                     onDateChange={(date_in) => {this.setState({createdAt: date_in});}}
                 />
                 <Button
-                    onPress={()=> {this.props.navigation.state.params.updateItem(this.state.id, this.state.name,
+                    onPress={()=> {this.props.navigation.state.params.saveItem(this.state.id, this.state.categoryId, this.state.name,
                         this.state.paper, this.state.color, this.state.duration, this.state.createdAt);
                         this.props.navigation.goBack();}}
-                    title="Save changes"
+                    title="Save"
                 />
 
             </ScrollView>
