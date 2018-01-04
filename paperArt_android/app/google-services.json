@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "324489592124",
+    "firebase_url": "https://paperartandroid.firebaseio.com",
+    "project_id": "paperartandroid",
+    "storage_bucket": "paperartandroid.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:324489592124:android:d61fab5d01c03179",
+        "android_client_info": {
+          "package_name": "com.example.oana.paperart"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "324489592124-at0r2171609bp53b5p82ecf89jarrhh0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.oana.paperart",
+            "certificate_hash": "cebc83344f33c82a25d9b76d8fb02a991934f3fc"
+          }
+        },
+        {
+          "client_id": "324489592124-6atf83qh1le803bnj69mcupkmi5o2mks.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXatMyjJIq0dnjdCm2ENNc67a36l3vdvY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "324489592124-6atf83qh1le803bnj69mcupkmi5o2mks.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
