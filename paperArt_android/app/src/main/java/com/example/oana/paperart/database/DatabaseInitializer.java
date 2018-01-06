@@ -23,7 +23,7 @@ import com.example.oana.paperart.Rating;
 
 import java.util.Date;
 
-public class DatabaseInitializer {
+/*public class DatabaseInitializer {
 
     public static void populate(final AppDatabase db) {
         populateWithTestData(db);
@@ -70,4 +70,4 @@ public class DatabaseInitializer {
         }
 
     }
-}
+}*/

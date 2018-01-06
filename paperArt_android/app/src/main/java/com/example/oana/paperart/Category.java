@@ -1,62 +1,79 @@
 package com.example.oana.paperart;
 
-import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.PrimaryKey;
 
-import java.io.Serializable;
+import com.google.firebase.database.Exclude;
+import com.google.firebase.database.IgnoreExtraProperties;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by oana on 12/4/2017.
  */
 
-@Entity(tableName = "categories")
-public class Category implements Serializable {
-    @PrimaryKey(autoGenerate = true)
-    int id;
+@IgnoreExtraProperties
+public class Category {
+    public String uid;
+    public String author;
     String name;
     String description;
     String imageName;
 
-    public Category(int id, String name, String description, String imageName) {
-        this.id = id;
+    public Category() {
+
+    }
+
+    public Category(String uid, String author, String name, String description, String imageName) {
+        this.uid = uid;
+        this.author = author;
         this.name = name;
         this.description = description;
         this.imageName = imageName;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    // [START category_to_map]
+    @Exclude
+    public Map<String, Object> toMap() {
+        HashMap<String, Object> result = new HashMap<>();
+        result.put("uid", uid);
+        result.put("author", author);
+        result.put("name", name);
+        result.put("description", description);
+        result.put("imageName", imageName);
+
+        return result;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String getUid() {
+        return uid;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setUid(String uid) {
+        this.uid = uid;
     }
 
-    public Integer getId() {
-        return id;
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
     }
 
     public String getName() {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getDescription() {
         return description;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Category)) return false;
-
-        Category category = (Category) o;
-
-        return id == category.id;
-
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getImageName() {
@@ -70,10 +87,13 @@ public class Category implements Serializable {
     @Override
     public String toString() {
         return "Category{" +
-                "id=" + id +
+                "uid='" + uid + '\'' +
+                ", author='" + author + '\'' +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", imageName='" + imageName + '\'' +
                 '}';
     }
+    // [END category_to_map]
+
 }

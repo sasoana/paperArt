@@ -18,7 +18,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.oana.paperart.database.AppDatabase;
 import com.example.oana.paperart.database.ItemWithRatings;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
@@ -39,7 +38,7 @@ import java.util.Locale;
  */
 
 public class ItemDetailsActivity extends FragmentActivity {
-    private AppDatabase mdb;
+    //private AppDatabase mdb;
     private static TextView editText_date;
     private ItemWithRatings item;
 
@@ -48,7 +47,7 @@ public class ItemDetailsActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.item_details);
 
-        mdb = AppDatabase.getAppDatabase(getApplicationContext());
+        //mdb = AppDatabase.getAppDatabase(getApplicationContext());
 
         item = (ItemWithRatings) getIntent().getExtras().getSerializable("item");
 
@@ -85,7 +84,8 @@ public class ItemDetailsActivity extends FragmentActivity {
                             editText_paper.getText().toString(),
                             editText_color.getText().toString(),
                             Integer.parseInt(editText_duration.getText().toString()),
-                            dateFormat.parse(editText_date.getText().toString()));
+                            dateFormat.parse(editText_date.getText().toString()),
+                            "");
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
@@ -121,9 +121,9 @@ public class ItemDetailsActivity extends FragmentActivity {
                         String val = value.getSelectedItem().toString();
                         Integer newId = 0;
                         Rating newRating = new Rating(newId, item.item.getId(), Integer.parseInt(val), msg, new Date());
-                        mdb.ratingDAO().add(newRating);
+                        //mdb.ratingDAO().add(newRating);
                         Toast.makeText(ItemDetailsActivity.this, "The rating has been added.", Toast.LENGTH_SHORT).show();
-                        item = mdb.paperItemDAO().findById(item.item.getId());
+                        //item = mdb.paperItemDAO().findById(item.item.getId());
                         computeAverage();
                         dialog.dismiss();
                     }
@@ -148,7 +148,7 @@ public class ItemDetailsActivity extends FragmentActivity {
                 dialog.setTitle("Rating history for " + item.getItem().getName());
 
                 GraphView graph = (GraphView) dialog.findViewById(R.id.graph);
-                Cursor averageCursor = mdb.ratingDAO().getAverageGroupedByDayForItem(item.item.getId());
+                Cursor averageCursor = null;//mdb.ratingDAO().getAverageGroupedByDayForItem(item.item.getId());
 
                 if (averageCursor.getCount() == 0) {
                     graph.setVisibility(View.GONE);

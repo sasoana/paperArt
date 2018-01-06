@@ -52,6 +52,18 @@ public class EmailPasswordActivity extends BaseActivity implements
         // Click listeners
         mSignInButton.setOnClickListener(this);
         mSignUpButton.setOnClickListener(this);
+
+        try {
+            if (getIntent().getExtras() != null) {
+                String email = getIntent().getExtras().getString("email");
+                if (email != null) {
+                    mEmailField.setText(email);
+                }
+            }
+        }
+        catch (Error e){
+
+        }
     }
 
     @Override

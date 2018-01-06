@@ -1,11 +1,6 @@
 package com.example.oana.paperart;
 
-import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.Ignore;
-import android.arch.persistence.room.PrimaryKey;
-import android.arch.persistence.room.TypeConverters;
-
-import com.example.oana.paperart.database.DateConverter;
+import com.google.firebase.database.IgnoreExtraProperties;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -14,17 +9,14 @@ import java.util.Date;
  * Created by oana on 12/4/2017.
  */
 
-@Entity(tableName = "ratings")
+@IgnoreExtraProperties
 public class Rating implements Serializable {
-    @PrimaryKey(autoGenerate = true)
     int id;
     Integer modelId;
     Integer value;
     String message;
-    @TypeConverters({DateConverter.class})
     Date createdAt;
 
-    @Ignore
     public Rating(int id, Integer modelId, Integer value, String message, Date date) {
         this.id = id;
         this.modelId = modelId;

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,7 +17,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.oana.paperart.database.AppDatabase;
 import com.example.oana.paperart.database.CategoryWithItems;
 import com.example.oana.paperart.database.ItemWithRatings;
 
@@ -27,16 +27,16 @@ import java.util.List;
  * Created by oana on 11/8/2017.
  */
 
-public class ItemList extends Activity {
+public class ItemList extends AppCompatActivity {
     ArrayList<PaperItem> items = new ArrayList<>();
     CategoryWithItems category;
     ListAdapter adapter;
-    private AppDatabase mDb;
+    //private AppDatabase mDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mDb = AppDatabase.getAppDatabase(getApplicationContext());
+        //mDb = AppDatabase.getAppDatabase(getApplicationContext());
 
         setContentView(R.layout.activity_list);
         ListView listview = (ListView) findViewById(R.id.listview);
@@ -46,7 +46,7 @@ public class ItemList extends Activity {
 
         //add header to list view
         TextView textView = new TextView(listview.getContext());
-        textView.setText("Items in " + this.category.category.getName() + " category");
+        textView.setText("Items in " + this.category.category.name + " category");
         listview.addHeaderView(textView, "", false);
         textView.setTextSize(20);
         textView.setTextColor(Color.BLACK);
@@ -61,7 +61,7 @@ public class ItemList extends Activity {
             public void onClick(View v) {
                 Intent intent = new Intent(ItemList.this, ItemDetailsActivity.class);
                 intent.putExtra("type", "add");
-                intent.putExtra("item", new ItemWithRatings(new PaperItem(category.category.getId())));
+                intent.putExtra("item", new ItemWithRatings(new PaperItem(0, "")));
                 startActivityForResult(intent, 0);
             }
         });
@@ -78,7 +78,7 @@ public class ItemList extends Activity {
                                     int position, long id) {
                 Intent intent = new Intent(ItemList.this, ItemDetailsActivity.class);
                 intent.putExtra("type", "update");
-                intent.putExtra("item", mDb.paperItemDAO().findById(items.get(position-1).getId()));
+                intent.putExtra("item", 0);//mDb.paperItemDAO().findById(items.get(position-1).getId()));
                 startActivityForResult(intent, 1);
             }
 
@@ -90,7 +90,7 @@ public class ItemList extends Activity {
             public boolean onItemLongClick(AdapterView<?> parent, View view,
                                            int arg2, long arg3) {
 
-                mDb.paperItemDAO().delete(items.get(arg2-1));
+                //mDb.paperItemDAO().delete(items.get(arg2-1));
                 loadData();
                 Toast.makeText(ItemList.this, "The item has been removed!", Toast.LENGTH_LONG).show();
                 return false;
@@ -99,7 +99,7 @@ public class ItemList extends Activity {
     }
 
     public void loadData() {
-        this.items = new ArrayList<>(mDb.categoryDAO().getOne(this.category.category.getId()).items);
+        this.items = new ArrayList<>();//mDb.categoryDAO().getOne(this.category.category.getId()).items);
         adapter.clear();
         adapter.addAll(this.items);
         adapter.notifyDataSetChanged();
@@ -120,13 +120,13 @@ public class ItemList extends Activity {
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == 0) { //add new item
                 PaperItem newItem = (PaperItem) data.getSerializableExtra("newItem");
-                mDb.paperItemDAO().addItem(newItem);
+                //mDb.paperItemDAO().addItem(newItem);
                 loadData();
                 Toast.makeText(ItemList.this, "The item has been added!", Toast.LENGTH_LONG).show();
             }
             if (requestCode == 1) {
                 PaperItem newItem = (PaperItem) data.getSerializableExtra("newItem");
-                mDb.paperItemDAO().update(newItem);
+                //mDb.paperItemDAO().update(newItem);
                 loadData();
                 Toast.makeText(ItemList.this, "The item has been updated!", Toast.LENGTH_LONG).show();
             }

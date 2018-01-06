@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 8,
-    "identityHash": "1d22625d9d6a8f9cd485d9caafb7552e",
+    "identityHash": "b9b76d4e104e0c31c5f3e5c6916fcc97",
     "entities": [
       {
-        "tableName": "categories",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `name` TEXT, `description` TEXT, `imageName` TEXT)",
+        "tableName": "Category",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER, `name` TEXT, `description` TEXT, `imageName` TEXT)",
         "fields": [
           {
             "fieldPath": "id",
@@ -30,17 +30,15 @@
           }
         ],
         "primaryKey": {
-          "columnNames": [
-            "id"
-          ],
-          "autoGenerate": true
+          "columnNames": [],
+          "autoGenerate": false
         },
         "indices": [],
         "foreignKeys": []
       },
       {
-        "tableName": "items",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `categoryId` INTEGER, `name` TEXT, `paperType` TEXT, `color` TEXT, `duration` INTEGER, `createdAt` TEXT)",
+        "tableName": "PaperItem",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER, `categoryId` INTEGER, `name` TEXT, `paperType` TEXT, `color` TEXT, `duration` INTEGER, `createdAt` TEXT, `username` TEXT)",
         "fields": [
           {
             "fieldPath": "id",
@@ -76,20 +74,23 @@
             "fieldPath": "createdAt",
             "columnName": "createdAt",
             "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "username",
+            "columnName": "username",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
-          "columnNames": [
-            "id"
-          ],
-          "autoGenerate": true
+          "columnNames": [],
+          "autoGenerate": false
         },
         "indices": [],
         "foreignKeys": []
       },
       {
-        "tableName": "ratings",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `modelId` INTEGER, `value` INTEGER, `message` TEXT, `createdAt` TEXT)",
+        "tableName": "Rating",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER, `modelId` INTEGER, `value` INTEGER, `message` TEXT, `createdAt` TEXT)",
         "fields": [
           {
             "fieldPath": "id",
@@ -118,10 +119,8 @@
           }
         ],
         "primaryKey": {
-          "columnNames": [
-            "id"
-          ],
-          "autoGenerate": true
+          "columnNames": [],
+          "autoGenerate": false
         },
         "indices": [],
         "foreignKeys": []
@@ -129,7 +128,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"1d22625d9d6a8f9cd485d9caafb7552e\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"b9b76d4e104e0c31c5f3e5c6916fcc97\")"
     ]
   }
 }
