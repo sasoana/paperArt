@@ -3,7 +3,6 @@ package com.example.oana.paperart;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -17,8 +16,12 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.oana.paperart.database.CategoryWithItems;
-import com.example.oana.paperart.database.ItemWithRatings;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,27 +32,52 @@ import java.util.List;
 
 public class ItemList extends AppCompatActivity {
     ArrayList<PaperItem> items = new ArrayList<>();
-    CategoryWithItems category;
+    Category category;
     ListAdapter adapter;
-    //private AppDatabase mDb;
+
+    private DatabaseReference mDatabase;
+
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //mDb = AppDatabase.getAppDatabase(getApplicationContext());
+
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+        mAuth = FirebaseAuth.getInstance();
 
         setContentView(R.layout.activity_list);
         ListView listview = (ListView) findViewById(R.id.listview);
-        final CategoryWithItems category = (CategoryWithItems) getIntent().getSerializableExtra("category");
-        this.items = new ArrayList<>(category.items);
+        final Category category = (Category) getIntent().getSerializableExtra("category");
+        this.items = new ArrayList<>();
         this.category = category;
 
-        //add header to list view
-        TextView textView = new TextView(listview.getContext());
-        textView.setText("Items in " + this.category.category.name + " category");
-        listview.addHeaderView(textView, "", false);
-        textView.setTextSize(20);
-        textView.setTextColor(Color.BLACK);
+        final String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        DatabaseReference itemsRef = mDatabase.child("category-items").child(category.getKey());
+        itemsRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                items.clear();
+                for (DataSnapshot itemsSnapshot : dataSnapshot.getChildren()) {
+                    PaperItem paperItem = itemsSnapshot.getValue(PaperItem.class);
+                    paperItem.setKey(itemsSnapshot.getKey());
+                    items.add(paperItem);
+                    Log.wtf("items updated", "item: " + paperItem.toString());
+                }
+                adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+        adapter = new ListAdapter(this, R.layout.list_item, items);
+        listview.setAdapter(adapter);
+
+        TextView title = (TextView) findViewById(R.id.categories_title);
+        title.setText("Items in " + this.category.getName() + " category");
 
         //add footer to list view
         Button addButton = new Button(listview.getContext());
@@ -61,14 +89,10 @@ public class ItemList extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(ItemList.this, ItemDetailsActivity.class);
                 intent.putExtra("type", "add");
-                intent.putExtra("item", new ItemWithRatings(new PaperItem(0, "")));
+                intent.putExtra("item", new PaperItem(category.getKey(), userId));
                 startActivityForResult(intent, 0);
             }
         });
-
-        adapter = new ListAdapter(this, R.layout.list_item, items);
-        listview.setAdapter(adapter);
-
 
         //update existing item
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -76,10 +100,15 @@ public class ItemList extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, final View view,
                                     int position, long id) {
-                Intent intent = new Intent(ItemList.this, ItemDetailsActivity.class);
-                intent.putExtra("type", "update");
-                intent.putExtra("item", 0);//mDb.paperItemDAO().findById(items.get(position-1).getId()));
-                startActivityForResult(intent, 1);
+                if (items.get(position).getUid().equals(userId)) {
+                    Intent intent = new Intent(ItemList.this, ItemDetailsActivity.class);
+                    intent.putExtra("type", "update");
+                    intent.putExtra("item", items.get(position));
+                    startActivityForResult(intent, 1);
+                }
+                else {
+                    Toast.makeText(ItemList.this, "Cannot update item. You are not the author!", Toast.LENGTH_SHORT).show();
+                }
             }
 
         });
@@ -90,24 +119,24 @@ public class ItemList extends AppCompatActivity {
             public boolean onItemLongClick(AdapterView<?> parent, View view,
                                            int arg2, long arg3) {
 
-                //mDb.paperItemDAO().delete(items.get(arg2-1));
-                loadData();
-                Toast.makeText(ItemList.this, "The item has been removed!", Toast.LENGTH_LONG).show();
+                final PaperItem item = items.get(arg2);
+                if (item.getUid().equals(userId)) {
+                    mDatabase.child("items").child(item.getKey()).removeValue();
+                    mDatabase.child("user-items").child(userId).child(item.getKey()).removeValue();
+                    mDatabase.child("category-items").child(category.getKey()).child(item.getKey()).removeValue();
+                    adapter.notifyDataSetChanged();
+                    Toast.makeText(ItemList.this, "The item has been removed!", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    Toast.makeText(ItemList.this, "Item could not be deleted. You are not the author!", Toast.LENGTH_SHORT).show();
+                }
                 return false;
             }
         });
     }
 
-    public void loadData() {
-        this.items = new ArrayList<>();//mDb.categoryDAO().getOne(this.category.category.getId()).items);
-        adapter.clear();
-        adapter.addAll(this.items);
-        adapter.notifyDataSetChanged();
-    }
-
     public void onBackPressed() {
         Intent resultIntent = new Intent();
-        this.category.items = items;
         resultIntent.putExtra("category", this.category);
         Log.wtf(ItemList.class.getSimpleName(), "xxx" + this.category.toString());
         setResult(Activity.RESULT_OK, resultIntent);
@@ -118,19 +147,7 @@ public class ItemList extends AppCompatActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == 0) { //add new item
-                PaperItem newItem = (PaperItem) data.getSerializableExtra("newItem");
-                //mDb.paperItemDAO().addItem(newItem);
-                loadData();
-                Toast.makeText(ItemList.this, "The item has been added!", Toast.LENGTH_LONG).show();
-            }
-            if (requestCode == 1) {
-                PaperItem newItem = (PaperItem) data.getSerializableExtra("newItem");
-                //mDb.paperItemDAO().update(newItem);
-                loadData();
-                Toast.makeText(ItemList.this, "The item has been updated!", Toast.LENGTH_LONG).show();
-            }
-
+            //loadData();
         }
     }
 

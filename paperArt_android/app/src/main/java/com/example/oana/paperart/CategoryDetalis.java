@@ -32,18 +32,14 @@ public class CategoryDetalis extends AppCompatActivity {
     private static final String TAG = "CategoryDetails";
     private static final String REQUIRED = "Required";
 
-    // [START declare_database_ref]
     private DatabaseReference mDatabase;
-    // [END declare_database_ref]
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.category_details);
 
-        // [START initialize_database_ref]
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        // [END initialize_database_ref]
 
         Spinner spinner = (Spinner) findViewById(R.id.imageSpinner);
         List<String> list = new ArrayList<String>();
@@ -78,16 +74,12 @@ public class CategoryDetalis extends AppCompatActivity {
             return;
         }
 
-        // Body is required
+        // Description is required
         if (TextUtils.isEmpty(desc)) {
             descriptionView.setError(REQUIRED);
             return;
         }
 
-        // Disable button so there are no multi-posts
-        Toast.makeText(this, "Adding...", Toast.LENGTH_SHORT).show();
-
-        // [START single_value_read]
         final String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         mDatabase.child("users").child(userId).addListenerForSingleValueEvent(
                 new ValueEventListener() {
@@ -96,7 +88,6 @@ public class CategoryDetalis extends AppCompatActivity {
                         // Get user value
                         User user = dataSnapshot.getValue(User.class);
 
-                        // [START_EXCLUDE]
                         if (user == null) {
                             // User is null, error out
                             Log.e(TAG, "User " + userId + " is unexpectedly null");
@@ -107,9 +98,7 @@ public class CategoryDetalis extends AppCompatActivity {
                             writeCategory(userId, user.username, name, desc, image);
                         }
 
-                        // Finish this Activity, back to the stream
                         finish();
-                        // [END_EXCLUDE]
                     }
 
                     @Override
@@ -117,7 +106,6 @@ public class CategoryDetalis extends AppCompatActivity {
                         Log.w(TAG, "getUser:onCancelled", databaseError.toException());
                     }
                 });
-        // [END single_value_read]
     }
 
     private void writeCategory(String uid, String username, String name, String description, String image) {

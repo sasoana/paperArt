@@ -4,6 +4,7 @@ package com.example.oana.paperart;
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,9 +13,11 @@ import java.util.Map;
  */
 
 @IgnoreExtraProperties
-public class Category {
-    public String uid;
-    public String author;
+public class Category implements Serializable{
+    private String key;
+
+    String uid;
+    String author;
     String name;
     String description;
     String imageName;
@@ -31,7 +34,6 @@ public class Category {
         this.imageName = imageName;
     }
 
-    // [START category_to_map]
     @Exclude
     public Map<String, Object> toMap() {
         HashMap<String, Object> result = new HashMap<>();
@@ -42,6 +44,15 @@ public class Category {
         result.put("imageName", imageName);
 
         return result;
+    }
+
+    @Exclude
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
     }
 
     public String getUid() {

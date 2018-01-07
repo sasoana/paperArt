@@ -20,11 +20,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,9 +36,7 @@ import java.util.List;
 public class CategoryList extends AppCompatActivity {
     private static final String TAG = "CategoryList";
 
-    // [START define_database_reference]
     private DatabaseReference mDatabase;
-    // [END define_database_reference]
 
     private FirebaseAuth mAuth;
 
@@ -51,32 +49,20 @@ public class CategoryList extends AppCompatActivity {
         setContentView(R.layout.activity_list);
         final ListView listview = (ListView) findViewById(R.id.listview);
 
-        // [START create_database_reference]
         mDatabase = FirebaseDatabase.getInstance().getReference().child("categories");
-        // [END create_database_reference]
         mAuth = FirebaseAuth.getInstance();
 
-        mDatabase.addChildEventListener(new ChildEventListener() {
+        mDatabase.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                Category category = dataSnapshot.getValue(Category.class);
-                categories.add(category);
-                Log.wtf("Locations updated", "location: " + category.toString());
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                categories.clear();
+                for (DataSnapshot categorySnapshot : dataSnapshot.getChildren()) {
+                    Category category = categorySnapshot.getValue(Category.class);
+                    category.setKey(categorySnapshot.getKey());
+                    categories.add(category);
+                    Log.wtf("categories updated", "category: " + category.toString());
+                }
+                adapter.notifyDataSetChanged();
             }
 
             @Override
@@ -84,22 +70,8 @@ public class CategoryList extends AppCompatActivity {
 
             }
         });
-
-        /*mDatabase.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) { //something changed!
-                for (DataSnapshot locationSnapshot : dataSnapshot.getChildren()) {
-                    Category category = locationSnapshot.getValue(Category.class);
-                    //categories.add(category);
-                    Log.wtf("Locations updated", "location: " + category.toString());
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });*/
+        adapter = new ListAdapter(this, R.layout.list_item, categories);
+        listview.setAdapter(adapter);
 
         TextView title = (TextView) findViewById(R.id.categories_title);
         title.setText("Categories");
@@ -115,37 +87,15 @@ public class CategoryList extends AppCompatActivity {
             }
         });
 
-        /*FirebaseListOptions<Category> options = new FirebaseListOptions.Builder<Category>()
-                .setQuery(mDatabase, Category.class)
-                .setLayout(R.layout.list_item)
-                .build();
-        adapter = new FirebaseListAdapter<Category>(options) {
-            @Override
-            protected void populateView(View view, Category category, int i) {
-                Log.wtf("aaa", category.toString());
-                TextView t = (TextView) view.findViewById(R.id.textView);
-                TextView d = (TextView) view.findViewById(R.id.descriptionView);
-
-                t.setText(category.getName() + "\n");
-                d.setText("Description: " + category.getDescription() + "\n");
-                Context context = t.getContext();
-                t.setCompoundDrawablesWithIntrinsicBounds(
-                        context.getResources().getIdentifier(category.getImageName(), "drawable", context.getPackageName()), 0, 0, 0);
-
-            }
-        };*/
-        adapter = new ListAdapter(this, R.layout.list_item, categories);
-        listview.setAdapter(adapter);
-
         //go to item list activity
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> parent, final View view,
                                     int position, long id) {
-                //Intent intent = new Intent(CategoryList.this, ItemList.class);
-                //intent.putExtra("category", categories.get(position-1));
-                //startActivityForResult(intent, 1);
+                Intent intent = new Intent(CategoryList.this, ItemList.class);
+                intent.putExtra("category", categories.get(position));
+                startActivityForResult(intent, 1);
             }
 
         });
@@ -156,8 +106,8 @@ public class CategoryList extends AppCompatActivity {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view,
                                            int arg2, long arg3) {
-                final Category category = categories.get(arg2-1);
-                if (1==1){//category.items.size() >= 1) {
+                final Category category = categories.get(arg2);
+                if (false){//category.items.size() >= 1) {
                     AlertDialog.Builder builder;
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         builder = new AlertDialog.Builder(listview.getContext(), android.R.style.Theme_Material_Dialog_Alert);
@@ -169,8 +119,8 @@ public class CategoryList extends AppCompatActivity {
                             .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int which) {
                                     // continue with delete
-                                    //mDb.categoryDAO().delete(category.category);
-                                    //loadData();
+                                    mDatabase.child(category.getKey()).removeValue();
+                                    adapter.notifyDataSetChanged();
                                     Toast.makeText(CategoryList.this, "The category has been removed!", Toast.LENGTH_SHORT).show();
                                 }
                             })
@@ -183,8 +133,8 @@ public class CategoryList extends AppCompatActivity {
                             .show();
                 }
                 else {
-                    //mDb.categoryDAO().delete(category.category);
-                    //loadData();
+                    mDatabase.child(category.getKey()).removeValue();
+                    adapter.notifyDataSetChanged();
                     Toast.makeText(CategoryList.this, "The category has been removed!", Toast.LENGTH_SHORT).show();
                 }
 
@@ -192,13 +142,6 @@ public class CategoryList extends AppCompatActivity {
             }
         });
     }
-
-    /*public void loadData() {
-        this.categories = mDb.categoryDAO().getAll();
-        adapter.clear();
-        adapter.addAll(this.categories);
-        adapter.notifyDataSetChanged();
-    }*/
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -208,6 +151,7 @@ public class CategoryList extends AppCompatActivity {
         }
     }
 
+    //custom list adapter
     private class ListAdapter extends ArrayAdapter<Category> {
 
         public ListAdapter(Context context, int textViewResourceId) {
