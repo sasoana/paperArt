@@ -3,7 +3,9 @@ package com.example.oana.paperart;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -79,6 +81,23 @@ public class ItemList extends AppCompatActivity {
         TextView title = (TextView) findViewById(R.id.categories_title);
         title.setText("Items in " + this.category.getName() + " category");
 
+        //show currently logged in user and role
+        mDatabase.child("users").child(userId).addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                        User user = dataSnapshot.getValue(User.class);
+                        ActionBar actionBar = getSupportActionBar();
+                        actionBar.setSubtitle(user.getUsername() + ": " + user.getRole());
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
         //add footer to list view
         Button addButton = new Button(listview.getContext());
         addButton.setText("Add new item in this category");
@@ -100,17 +119,11 @@ public class ItemList extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, final View view,
                                     int position, long id) {
-                if (items.get(position).getUid().equals(userId)) {
-                    Intent intent = new Intent(ItemList.this, ItemDetailsActivity.class);
-                    intent.putExtra("type", "update");
-                    intent.putExtra("item", items.get(position));
-                    startActivityForResult(intent, 1);
-                }
-                else {
-                    Toast.makeText(ItemList.this, "Cannot update item. You are not the author!", Toast.LENGTH_SHORT).show();
-                }
+                Intent intent = new Intent(ItemList.this, ItemDetailsActivity.class);
+                intent.putExtra("type", "update");
+                intent.putExtra("item", items.get(position));
+                startActivityForResult(intent, 1);
             }
-
         });
 
         listview.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -176,13 +189,17 @@ public class ItemList extends AppCompatActivity {
 
             if (p != null) {
                 TextView t = (TextView) v.findViewById(R.id.textView);
+                TextView authorView = (TextView) v.findViewById(R.id.descriptionView);
 
                 if (t != null) {
                     t.setText("Model name: " + p.getName() + "\n"
                             + "Paper type: " + p.getPaperType() + "\n"
                             + "Duration: " + p.getDuration() + " minutes");
                     t.setCompoundDrawablesWithIntrinsicBounds(R.drawable.rsz_img_4068, 0, 0, 0);
+                    t.setTextSize(16);
                 }
+                authorView.setText("Author: " + p.getAuthor());
+                authorView.setTypeface(null, Typeface.BOLD);;
             }
             return v;
         }

@@ -4,10 +4,10 @@ import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -44,15 +44,17 @@ import java.util.Map;
  * Created by oana on 11/7/2017.
  */
 
-public class ItemDetailsActivity extends FragmentActivity {
+public class ItemDetailsActivity extends AppCompatActivity {
 
     private static TextView editText_date;
     private PaperItem item;
+    private ArrayList<Rating> ratings = new ArrayList<>();
 
     private static final String TAG = "ItemDetails";
     private static final String REQUIRED = "Required";
 
     private DatabaseReference mDatabase;
+    private FirebaseAuth mAuth;
 
     final DateFormat dateFormat = new SimpleDateFormat("MMMM dd, yyyy", Locale.ENGLISH);
 
@@ -62,8 +64,47 @@ public class ItemDetailsActivity extends FragmentActivity {
         setContentView(R.layout.item_details);
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
+        mAuth = FirebaseAuth.getInstance();
+
+        //show currently logged in user and role
+        final String userId = mAuth.getCurrentUser().getUid();
+        mDatabase.child("users").child(userId).addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                        User user = dataSnapshot.getValue(User.class);
+                        ActionBar actionBar = getSupportActionBar();
+                        actionBar.setSubtitle(user.getUsername() + ": " + user.getRole());
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
 
         item = (PaperItem) getIntent().getExtras().getSerializable("item");
+
+        //show up-to-date rating average
+        mDatabase.child("item-ratings").child(item.getKey()).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                ratings.clear();
+                for (DataSnapshot categorySnapshot : dataSnapshot.getChildren()) {
+                    Rating rating = categorySnapshot.getValue(Rating.class);
+                    rating.setKey(categorySnapshot.getKey());
+                    ratings.add(rating);
+                    computeAverage();
+                    Log.wtf("ratings updated", "category: " + rating.toString());
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
         //avoid focus on edit text
         TextView name = (TextView) findViewById(R.id.tv_name);
@@ -84,8 +125,6 @@ public class ItemDetailsActivity extends FragmentActivity {
         editText_date = (TextView) findViewById(R.id.edit_date);
         editText_date.setText(dateFormat.format(item.getCreatedAt()));
 
-        computeAverage();
-
         //save details button
         Button saveButton = (Button) findViewById(R.id.button_save);
         saveButton.setOnClickListener(new View.OnClickListener() {
@@ -93,6 +132,16 @@ public class ItemDetailsActivity extends FragmentActivity {
                 addItem();
             }
         });
+        //hide update button if not author
+        if (!item.getUid().equals(userId)) {
+            editText_color.setEnabled(false);
+            editText_duration.setEnabled(false);
+            editText_name.setEnabled(false);
+            editText_paper.setEnabled(false);
+            Button changeDate = (Button) findViewById(R.id.change_date);
+            changeDate.setVisibility(View.GONE);
+            saveButton.setVisibility(View.GONE);
+        }
 
         //add rating button
         Button addRating = (Button) findViewById(R.id.addRating);
@@ -114,15 +163,49 @@ public class ItemDetailsActivity extends FragmentActivity {
                 save.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
                         EditText message = (EditText) dialog.findViewById(R.id.edit_rating_message);
-                        String msg = message.getText().toString();
-                        Spinner value = (Spinner) dialog.findViewById(R.id.valueSpinner);
-                        String val = value.getSelectedItem().toString();
-                        Integer newId = 0;
-                        //Rating newRating = new Rating(newId, item.getKey(), Integer.parseInt(val), msg, new Date());
-                        //mdb.ratingDAO().add(newRating);
-                        Toast.makeText(ItemDetailsActivity.this, "The rating has been added.", Toast.LENGTH_SHORT).show();
-                        //item = mdb.paperItemDAO().findById(item.item.getId());
-                        computeAverage();
+                        final String msg = message.getText().toString();
+                        final Spinner value = (Spinner) dialog.findViewById(R.id.valueSpinner);
+                        final Integer val = Integer.parseInt(value.getSelectedItem().toString());
+
+                        final String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                        mDatabase.child("users").child(userId).addListenerForSingleValueEvent(
+                                new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                                        User user = dataSnapshot.getValue(User.class);
+
+                                        if (user == null) {
+                                            // User is null, error out
+                                            Log.e(TAG, "User " + userId + " is unexpectedly null");
+                                            Toast.makeText(ItemDetailsActivity.this, "Error: could not fetch user.",
+                                                    Toast.LENGTH_SHORT).show();
+                                        } else {
+                                            String key = mDatabase.child("ratings").push().getKey();
+                                            Rating rating = new Rating(userId, user.getUsername(), item.getKey(),
+                                                    val, msg, new Date());
+                                            rating.setKey(key);
+                                            Map<String, Object> postValues = rating.toMap();
+
+                                            Map<String, Object> childUpdates = new HashMap<>();
+                                            childUpdates.put("/ratings/" + key, postValues);
+                                            childUpdates.put("/item-ratings/" + item.getKey() + "/" + key, postValues);
+                                            childUpdates.put("/user-ratings/" + userId + "/" + key, postValues);
+                                            mDatabase.updateChildren(childUpdates);
+                                            ratings.add(rating);
+                                            Toast.makeText(ItemDetailsActivity.this, "The rating has been added.", Toast.LENGTH_SHORT).show();
+                                        }
+                                        Intent intent = new Intent();
+                                        setResult(Activity.RESULT_OK, intent);
+                                    }
+
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+                                        Log.w(TAG, "getUser:onCancelled", databaseError.toException());
+                                    }
+                                });
+
+                        //computeAverage();
                         dialog.dismiss();
                     }
                 });
@@ -141,62 +224,97 @@ public class ItemDetailsActivity extends FragmentActivity {
         Button showChart = (Button) findViewById(R.id.showChartButton);
         showChart.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Dialog dialog = new Dialog(ItemDetailsActivity.this);
+                final Dialog dialog = new Dialog(ItemDetailsActivity.this);
                 dialog.setContentView(R.layout.rating_history);
                 dialog.setTitle("Rating history for " + item.getName());
 
-                GraphView graph = (GraphView) dialog.findViewById(R.id.graph);
-                Cursor averageCursor = null;//mdb.ratingDAO().getAverageGroupedByDayForItem(item.item.getId());
+                final GraphView graph = (GraphView) dialog.findViewById(R.id.graph);
 
-                if (averageCursor.getCount() == 0) {
-                    graph.setVisibility(View.GONE);
-                    TextView noRatings = (TextView) dialog.findViewById(R.id.noRatings);
-                    noRatings.setText("There are no ratings for this item.");
-                    noRatings.setVisibility(View.VISIBLE);
-                }
-                DataPoint[] data = new DataPoint[averageCursor.getCount()];
-                int i = 0;
-                Log.wtf("xxx", Integer.toString(averageCursor.getCount()));
-                Date min = new Date();
-                Date max = new Date(1);
-                while (averageCursor.moveToNext()) {
-                    if (i == 0) averageCursor.moveToFirst();
-                    DateFormat format = new SimpleDateFormat("MMMM dd, yyyy", Locale.ENGLISH);
-                    Date date = null;
-                    try {
-                        Log.wtf("xxx", averageCursor.getString(0));
-                        date = format.parse(averageCursor.getString(0));
-                        if (date.compareTo(min) < 0) min = date;
-                        if (date.compareTo(max) > 0) max = date;
-                    } catch (ParseException e) {
-                        e.printStackTrace();
+                final ArrayList<Rating> ratings2 = new ArrayList();
+                mDatabase.child("item-ratings").child(item.getKey()).orderByChild("createdAt").addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        ratings2.clear();
+                        final GraphView graph = (GraphView) dialog.findViewById(R.id.graph);
+                        for (DataSnapshot categorySnapshot : dataSnapshot.getChildren()) {
+                            Rating rating = categorySnapshot.getValue(Rating.class);
+                            rating.setKey(categorySnapshot.getKey());
+                            ratings2.add(rating);
+                        }
+                        if (ratings2.size() == 0) {
+                            graph.setVisibility(View.GONE);
+                            TextView noRatings = (TextView) dialog.findViewById(R.id.noRatings);
+                            noRatings.setText("There are no ratings for this item.");
+                            noRatings.setVisibility(View.VISIBLE);
+                        }
+                        ArrayList<DataPoint> data = new ArrayList<DataPoint>();
+                        Date min = new Date();
+                        Date max = new Date(1);
+                        Rating prev = ratings2.get(0);
+                        int pos = 0;
+                        for (int i = 1; i <= ratings2.size(); i++) {
+                            String datePrev = dateFormat.format(prev.getCreatedAt());
+                            String currentDate = "";
+                            if (i == ratings2.size()) {
+                                currentDate = dateFormat.format(ratings2.get(i-1).getCreatedAt());
+                            }
+                            else {
+                                currentDate = dateFormat.format(ratings2.get(i).getCreatedAt());
+                            }
+                            if (!datePrev.equals(currentDate) || (pos == (ratings2.size()-1))) {
+                                Double average = 0.0;
+                                Integer sum = 0;
+                                for (int j = 0; j <= pos; j++) {
+                                    sum += ratings2.get(j).getValue();
+                                }
+                                average = sum / (1.0 * (pos + 1));
+                                Date date = prev.getCreatedAt();
+                                if (date.compareTo(min) < 0) min = date;
+                                if (date.compareTo(max) > 0) max = date;
+                                data.add(new DataPoint(date, average));
+                                Log.wtf("graphdata", date.toString() + " " + average);
+
+                                if (i < ratings2.size()) {
+                                    prev = ratings2.get(i);
+                                }
+                            } else {
+                                pos = i;
+                            }
+                        }
+
+                        DataPoint[] finalData = new DataPoint[data.size()];
+                        int i = 0;
+                        for(DataPoint point : data) {
+                            finalData[i] = point;
+                            i++;
+                        }
+                        LineGraphSeries<DataPoint> series = new LineGraphSeries<>(finalData);
+                        graph.addSeries(series);
+
+                        graph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(ItemDetailsActivity.this));
+                        graph.getGridLabelRenderer().setNumHorizontalLabels(finalData.length);
+
+                        // set manual x bounds to have nice steps
+                        graph.getViewport().setMinX(min.getTime());
+                        graph.getViewport().setMaxX(max.getTime());
+                        graph.getViewport().setXAxisBoundsManual(true);
+
+                        // as we use dates as labels, the human rounding to nice readable numbers
+                        // is not necessary
+                        graph.getGridLabelRenderer().setHumanRounding(false);
+
+                        dialog.show();
                     }
 
-                    Double d = averageCursor.getDouble(1);
-                    Log.wtf("xxx", d.toString());
-                    data[i] = new DataPoint(date, averageCursor.getDouble(1));
-                    i++;
-                }
-                LineGraphSeries<DataPoint> series = new LineGraphSeries<>(data);
-                graph.addSeries(series);
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
 
-                graph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(ItemDetailsActivity.this));
-                graph.getGridLabelRenderer().setNumHorizontalLabels(averageCursor.getCount());
-
-                // set manual x bounds to have nice steps
-                graph.getViewport().setMinX(min.getTime());
-                graph.getViewport().setMaxX(max.getTime());
-                graph.getViewport().setXAxisBoundsManual(true);
-
-                // as we use dates as labels, the human rounding to nice readable numbers
-                // is not necessary
-                graph.getGridLabelRenderer().setHumanRounding(false);
-
-                dialog.show();
+                    }
+                });
             }
         });
 
-        //don't show the button for the chart if we add new item
+        //don't show the button for the chart and add rating if we add new item
         String type = getIntent().getExtras().getString("type");
         if (type.equals("add")) {
             showChart.setVisibility(View.GONE);
@@ -261,6 +379,7 @@ public class ItemDetailsActivity extends FragmentActivity {
 
         String key = mDatabase.child("items").push().getKey();
         PaperItem item = new PaperItem(uid, author, categoryId, name, paperType, color, duration, createdAt);
+        item.setKey(key);
         Log.wtf("newItem", item.toString());
         Map<String, Object> postValues = item.toMap();
 
@@ -293,17 +412,16 @@ public class ItemDetailsActivity extends FragmentActivity {
         //compute average rating
         TextView averageRating = (TextView) findViewById(R.id.tv_rating);
 
-        /*final Double average;
+        final Double average;
         Integer sum = 0;
-        Log.wtf("xxx", item.ratings.toString());
-        if(!item.ratings.isEmpty()) {
-            for (Rating rating : item.ratings) {
+        if(!ratings.isEmpty()) {
+            for (Rating rating : ratings) {
                 sum += rating.getValue();
             }
-            average =  sum.doubleValue() / item.ratings.size();
+            average =  sum.doubleValue() / ratings.size();
         }
         else average = sum*1.0;
-        averageRating.setText("Current average rating is " + average.toString());*/
+        averageRating.setText("Current average rating is " + average.toString());
     }
 
     public void showDatePickerDialog(View v) {

@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -29,6 +30,8 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
+//import android.support.v7.app.ActionBar;
+
 /**
  * Created by oana on 12/6/2017.
  */
@@ -46,13 +49,32 @@ public class CategoryList extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_list);
         final ListView listview = (ListView) findViewById(R.id.listview);
 
-        mDatabase = FirebaseDatabase.getInstance().getReference().child("categories");
+        mDatabase = FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
 
-        mDatabase.addValueEventListener(new ValueEventListener() {
+        //show currently logged in user and role
+        final String userId = mAuth.getCurrentUser().getUid();
+        mDatabase.child("users").child(userId).addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                        User user = dataSnapshot.getValue(User.class);
+                        ActionBar actionBar = getSupportActionBar();
+                        actionBar.setSubtitle(user.getUsername() + ": " + user.getRole());
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
+        mDatabase.child("categories").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 categories.clear();
@@ -79,6 +101,9 @@ public class CategoryList extends AppCompatActivity {
         //add footer to list view
         Button addButton = new Button(listview.getContext());
         addButton.setText("Add new category");
+        if (!MainActivity.role.equals("admin")) {
+            addButton.setVisibility(View.GONE);
+        }
         listview.addFooterView(addButton, "", true);
         addButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -101,46 +126,47 @@ public class CategoryList extends AppCompatActivity {
         });
 
         //delete category
-        listview.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        if (MainActivity.role.equals("admin")) {
+            listview.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view,
-                                           int arg2, long arg3) {
-                final Category category = categories.get(arg2);
-                if (false){//category.items.size() >= 1) {
-                    AlertDialog.Builder builder;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        builder = new AlertDialog.Builder(listview.getContext(), android.R.style.Theme_Material_Dialog_Alert);
+                @Override
+                public boolean onItemLongClick(AdapterView<?> parent, View view,
+                                               int arg2, long arg3) {
+                    final Category category = categories.get(arg2);
+                    if (false) {//category.items.size() >= 1) {
+                        AlertDialog.Builder builder;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            builder = new AlertDialog.Builder(listview.getContext(), android.R.style.Theme_Material_Dialog_Alert);
+                        } else {
+                            builder = new AlertDialog.Builder(listview.getContext());
+                        }
+                        builder.setTitle("Delete category")
+                                .setMessage("This category has items that will also be removed.Are you sure you want to delete this entry?")
+                                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        // continue with delete
+                                        mDatabase.child("categories").child(category.getKey()).removeValue();
+                                        adapter.notifyDataSetChanged();
+                                        Toast.makeText(CategoryList.this, "The category has been removed!", Toast.LENGTH_SHORT).show();
+                                    }
+                                })
+                                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        // do nothing
+                                    }
+                                })
+                                .setIcon(android.R.drawable.ic_dialog_alert)
+                                .show();
                     } else {
-                        builder = new AlertDialog.Builder(listview.getContext());
+                        mDatabase.child("categories").child(category.getKey()).removeValue();
+                        adapter.notifyDataSetChanged();
+                        Toast.makeText(CategoryList.this, "The category has been removed!", Toast.LENGTH_SHORT).show();
                     }
-                    builder.setTitle("Delete category")
-                            .setMessage("This category has items that will also be removed.Are you sure you want to delete this entry?")
-                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    // continue with delete
-                                    mDatabase.child(category.getKey()).removeValue();
-                                    adapter.notifyDataSetChanged();
-                                    Toast.makeText(CategoryList.this, "The category has been removed!", Toast.LENGTH_SHORT).show();
-                                }
-                            })
-                            .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    // do nothing
-                                }
-                            })
-                            .setIcon(android.R.drawable.ic_dialog_alert)
-                            .show();
-                }
-                else {
-                    mDatabase.child(category.getKey()).removeValue();
-                    adapter.notifyDataSetChanged();
-                    Toast.makeText(CategoryList.this, "The category has been removed!", Toast.LENGTH_SHORT).show();
-                }
 
-                return false;
-            }
-        });
+                    return false;
+                }
+            });
+        }
     }
 
     @Override

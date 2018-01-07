@@ -1,6 +1,7 @@
 package com.example.oana.paperart;
 
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -33,6 +34,7 @@ public class CategoryDetalis extends AppCompatActivity {
     private static final String REQUIRED = "Required";
 
     private DatabaseReference mDatabase;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +42,26 @@ public class CategoryDetalis extends AppCompatActivity {
         setContentView(R.layout.category_details);
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
+        mAuth = FirebaseAuth.getInstance();
+
+        //show currently logged in user and role
+        final String userId = mAuth.getCurrentUser().getUid();
+        mDatabase.child("users").child(userId).addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                        User user = dataSnapshot.getValue(User.class);
+                        ActionBar actionBar = getSupportActionBar();
+                        actionBar.setSubtitle(user.getUsername() + ": " + user.getRole());
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
 
         Spinner spinner = (Spinner) findViewById(R.id.imageSpinner);
         List<String> list = new ArrayList<String>();

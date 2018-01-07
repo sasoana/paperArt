@@ -15,8 +15,11 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 /**
  * Created by oana on 1/4/2018.
@@ -38,6 +41,10 @@ public class EmailPasswordActivity extends BaseActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //enables offline support
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        
         setContentView(R.layout.login_activity);
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -131,10 +138,26 @@ public class EmailPasswordActivity extends BaseActivity implements
     }
 
     private void onAuthSuccess(FirebaseUser user) {
-        String username = usernameFromEmail(user.getEmail());
+        final String username = usernameFromEmail(user.getEmail());
+        final FirebaseUser firebaseUser = user;
+        final User user1 = new User(username, user.getEmail(), "user");
+        mDatabase.child("users").child(user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                User userFromDB = dataSnapshot.getValue(User.class);
+                if (userFromDB != null) {
+                    user1.setRole(userFromDB.getRole());
+                }
+                // Write new user
+                writeNewUser(firebaseUser.getUid(), username, firebaseUser.getEmail(), user1.getRole());
+                Log.wtf("userLog", user1.getRole());
+            }
 
-        // Write new user
-        writeNewUser(user.getUid(), username, user.getEmail());
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
         // Go to MainActivity
         startActivity(new Intent(EmailPasswordActivity.this, MainActivity.class));
@@ -169,8 +192,8 @@ public class EmailPasswordActivity extends BaseActivity implements
     }
 
     // [START basic_write]
-    private void writeNewUser(String userId, String name, String email) {
-        User user = new User(name, email, "admin");
+    private void writeNewUser(String userId, String name, String email, String role) {
+        User user = new User(name, email, role);
 
         mDatabase.child("users").child(userId).setValue(user);
     }
