@@ -30,6 +30,7 @@ import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -87,24 +88,26 @@ public class ItemDetailsActivity extends AppCompatActivity {
         item = (PaperItem) getIntent().getExtras().getSerializable("item");
 
         //show up-to-date rating average
-        mDatabase.child("item-ratings").child(item.getKey()).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                ratings.clear();
-                for (DataSnapshot categorySnapshot : dataSnapshot.getChildren()) {
-                    Rating rating = categorySnapshot.getValue(Rating.class);
-                    rating.setKey(categorySnapshot.getKey());
-                    ratings.add(rating);
-                    computeAverage();
-                    Log.wtf("ratings updated", "category: " + rating.toString());
+        if(getIntent().getExtras().getString("type").equals("update")) {
+            mDatabase.child("item-ratings").child(item.getKey()).addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    ratings.clear();
+                    for (DataSnapshot categorySnapshot : dataSnapshot.getChildren()) {
+                        Rating rating = categorySnapshot.getValue(Rating.class);
+                        rating.setKey(categorySnapshot.getKey());
+                        ratings.add(rating);
+                        computeAverage();
+                        Log.wtf("ratings updated", "category: " + rating.toString());
+                    }
                 }
-            }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
 
-            }
-        });
+                }
+            });
+        }
 
         //avoid focus on edit text
         TextView name = (TextView) findViewById(R.id.tv_name);
@@ -411,6 +414,7 @@ public class ItemDetailsActivity extends AppCompatActivity {
     public void computeAverage() {
         //compute average rating
         TextView averageRating = (TextView) findViewById(R.id.tv_rating);
+        DecimalFormat df2 = new DecimalFormat(".##");
 
         final Double average;
         Integer sum = 0;
@@ -421,7 +425,7 @@ public class ItemDetailsActivity extends AppCompatActivity {
             average =  sum.doubleValue() / ratings.size();
         }
         else average = sum*1.0;
-        averageRating.setText("Current average rating is " + average.toString());
+        averageRating.setText("Current average rating is " + df2.format(average).toString());
     }
 
     public void showDatePickerDialog(View v) {

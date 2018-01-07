@@ -44,7 +44,7 @@ public class EmailPasswordActivity extends BaseActivity implements
 
         //enables offline support
         FirebaseDatabase.getInstance().setPersistenceEnabled(true);
-        
+
         setContentView(R.layout.login_activity);
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
