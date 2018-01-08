@@ -67,6 +67,9 @@ public class ItemDetailsActivity extends AppCompatActivity {
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
 
+        final Button showChart = (Button) findViewById(R.id.showChartButton);
+        showChart.setVisibility(View.GONE);
+
         //show currently logged in user and role
         final String userId = mAuth.getCurrentUser().getUid();
         mDatabase.child("users").child(userId).addListenerForSingleValueEvent(
@@ -98,6 +101,7 @@ public class ItemDetailsActivity extends AppCompatActivity {
                         rating.setKey(categorySnapshot.getKey());
                         ratings.add(rating);
                         computeAverage();
+                        showChart.setVisibility(View.VISIBLE);
                         Log.wtf("ratings updated", "category: " + rating.toString());
                     }
                 }
@@ -224,8 +228,8 @@ public class ItemDetailsActivity extends AppCompatActivity {
         });
 
         //show chart button
-        Button showChart = (Button) findViewById(R.id.showChartButton);
-        showChart.setOnClickListener(new View.OnClickListener() {
+        Button showChart1 = (Button) findViewById(R.id.showChartButton);
+        showChart1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 final Dialog dialog = new Dialog(ItemDetailsActivity.this);
                 dialog.setContentView(R.layout.rating_history);
@@ -244,18 +248,21 @@ public class ItemDetailsActivity extends AppCompatActivity {
                             rating.setKey(categorySnapshot.getKey());
                             ratings2.add(rating);
                         }
-                        if (ratings2.size() == 0) {
+                        /*if (ratings2.size() == 0) {
                             graph.setVisibility(View.GONE);
                             TextView noRatings = (TextView) dialog.findViewById(R.id.noRatings);
                             noRatings.setText("There are no ratings for this item.");
                             noRatings.setVisibility(View.VISIBLE);
-                        }
+                            dialog.show();
+                            return;
+                        }*/
                         ArrayList<DataPoint> data = new ArrayList<DataPoint>();
                         Date min = new Date();
                         Date max = new Date(1);
                         Rating prev = ratings2.get(0);
+                        int j = 0;
                         int pos = 0;
-                        for (int i = 1; i <= ratings2.size(); i++) {
+                        for (int i = 1; i <=  ratings2.size(); i++) {
                             String datePrev = dateFormat.format(prev.getCreatedAt());
                             String currentDate = "";
                             if (i == ratings2.size()) {
@@ -267,7 +274,7 @@ public class ItemDetailsActivity extends AppCompatActivity {
                             if (!datePrev.equals(currentDate) || (pos == (ratings2.size()-1))) {
                                 Double average = 0.0;
                                 Integer sum = 0;
-                                for (int j = 0; j <= pos; j++) {
+                                for (j = 0; j <= pos; j++) {
                                     sum += ratings2.get(j).getValue();
                                 }
                                 average = sum / (1.0 * (pos + 1));
@@ -283,6 +290,21 @@ public class ItemDetailsActivity extends AppCompatActivity {
                             } else {
                                 pos = i;
                             }
+                        }
+                        if ((j-1) != ratings2.size()-1) {
+                            Integer sum = 0, count = 0;
+                            Double average = 0.0;
+                            Date currentDate = ratings2.get(ratings2.size()-1).getCreatedAt();
+                            for (int i = 0; i < ratings2.size(); i++) {
+                                sum += ratings2.get(i).getValue();
+                                count++;
+                            }
+                            average = sum / (1.0 * count);
+                            Date date = ratings2.get(j).getCreatedAt();
+                            if (date.compareTo(min) < 0) min = date;
+                            if (date.compareTo(max) > 0) max = date;
+                            data.add(new DataPoint(date, average));
+                            Log.wtf("graphdata", date.toString() + " " + average);
                         }
 
                         DataPoint[] finalData = new DataPoint[data.size()];
