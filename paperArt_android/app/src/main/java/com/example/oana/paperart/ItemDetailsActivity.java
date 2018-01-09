@@ -286,6 +286,7 @@ public class ItemDetailsActivity extends AppCompatActivity {
 
                                 if (i < ratings2.size()) {
                                     prev = ratings2.get(i);
+                                    pos=i;
                                 }
                             } else {
                                 pos = i;
@@ -327,8 +328,9 @@ public class ItemDetailsActivity extends AppCompatActivity {
                         // as we use dates as labels, the human rounding to nice readable numbers
                         // is not necessary
                         graph.getGridLabelRenderer().setHumanRounding(false);
-
-                        dialog.show();
+                        if (!isFinishing()) {
+                            dialog.show();
+                        }
                     }
 
                     @Override
